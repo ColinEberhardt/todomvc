@@ -122,6 +122,7 @@ module.exports = function Page(browser) {
 		var textField = this.getItemInputField();
 		textField.sendKeys(itemText);
 		textField.sendKeys(webdriver.Key.ENTER);
+		browser.sleep(2000);
 	};
 
 	this.toggleItemAtIndex = function (index) {
