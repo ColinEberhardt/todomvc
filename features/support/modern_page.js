@@ -182,9 +182,27 @@ class ModernPage {
   }
 
   async editItemAtIndex(index, text) {
-    const editElement = await this.waitForElement(this.getListItemEditCss(index));
-    await editElement.clear();
-    await editElement.sendKeys(text);
+    // Wait for the item to enter editing mode (have the 'editing' class)
+    const editingItemCss = this.getListItemCss(index) + '.editing';
+    await this.waitForElement(editingItemCss);
+    
+    // Get the edit input element
+    const editInputCss = editingItemCss + ' .edit';
+    const editElement = await this.waitForElement(editInputCss);
+    
+    // If the text is just the Enter key (empty string + Enter), clear the field first
+    if (text === Key.ENTER) {
+      // Use the predefined removal sequence to clear the text completely
+      await editElement.sendKeys(REMOVE_TEXT_KEY_SEQ);
+      await editElement.sendKeys(Key.ENTER);
+    } else {
+      // For normal text, use the predefined removal sequence to clear, then type new text
+      await editElement.sendKeys(REMOVE_TEXT_KEY_SEQ);
+      await editElement.sendKeys(text);
+    }
+    
+    // Wait for DOM changes to complete
+    await this.browser.sleep(300);
   }
 
   async clickClearCompleteButton() {
