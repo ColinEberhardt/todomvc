@@ -100,7 +100,15 @@ class ModernPage {
   async waitForElement(css, failMsg) {
     try {
       const element = await this.browser.wait(until.elementLocated(By.css(css)), DEFAULT_TIMEOUT);
-      return await this.browser.wait(until.elementIsVisible(element), DEFAULT_TIMEOUT);
+      
+      // For toggle elements, they might have opacity: 0, so just check if they're present and enabled
+      if (css.includes('.toggle')) {
+        await this.browser.wait(until.elementIsEnabled(element), DEFAULT_TIMEOUT);
+        return element;
+      } else {
+        // For other elements, check visibility as before
+        return await this.browser.wait(until.elementIsVisible(element), DEFAULT_TIMEOUT);
+      }
     } catch (error) {
       throw new Error(failMsg || `Element ${css} not found`);
     }

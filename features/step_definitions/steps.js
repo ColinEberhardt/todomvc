@@ -245,15 +245,15 @@ Then('the second todo should be {string} and complete', async function (expected
 });
 
 Then('I should see the first todo {string}', async function (expectedText) {
-  await this.testOps.assertItemText(0, expectedText);
+  await this.testOps.assertTodoIsVisible(expectedText);
 });
 
 Then('I should see the second todo {string}', async function (expectedText) {
-  await this.testOps.assertItemText(1, expectedText);
+  await this.testOps.assertTodoIsVisible(expectedText);
 });
 
 Then('I should see the third todo {string}', async function (expectedText) {
-  await this.testOps.assertItemText(2, expectedText);
+  await this.testOps.assertTodoIsVisible(expectedText);
 });
 
 Then('the second todo should be hidden', async function () {

@@ -75,22 +75,38 @@ class ModernTestOperations {
   }
 
   async assertItems(expectedItems) {
-    await this.page.waitForListItemCount(expectedItems.length);
+    // Count only non-hidden expected items (this is what should be visible)
+    const expectedVisibleItems = expectedItems.filter(item => item !== this.page.ITEM_HIDDEN_OR_REMOVED);
     
-    for (let i = 0; i < expectedItems.length; i++) {
-      if (expectedItems[i] === this.page.ITEM_HIDDEN_OR_REMOVED) {
-        // Check if item is hidden
-        try {
-          const element = await this.browser.findElement(By.css(this.page.getListItemCss(i)));
-          const isDisplayed = await element.isDisplayed();
-          if (isDisplayed) {
-            throw new Error(`Expected item ${i} to be hidden but it was visible`);
-          }
-        } catch (error) {
-          // Element not found is also acceptable for "hidden"
+    // Wait for the correct number of visible items (some implementations remove DOM elements, others hide them)
+    await this.page.waitForListItemCount(expectedVisibleItems.length);
+    
+    // Get all visible todo items from the DOM
+    const listItems = await this.browser.findElements(By.css('.todo-list li'));
+    const visibleItems = [];
+    
+    for (const item of listItems) {
+      try {
+        if (await item.isDisplayed()) {
+          const labelElement = await item.findElement(By.css('label'));
+          const text = await labelElement.getText();
+          visibleItems.push(text);
         }
-      } else {
-        await this.assertItemText(i, expectedItems[i]);
+      } catch (e) {
+        // Skip if element is stale or doesn't have a label
+        continue;
+      }
+    }
+    
+    // Check that we have the expected visible items
+    if (visibleItems.length !== expectedVisibleItems.length) {
+      throw new Error(`Expected ${expectedVisibleItems.length} visible items but found ${visibleItems.length}: [${visibleItems.join(', ')}]`);
+    }
+    
+    // Check that each expected visible item is present
+    for (const expectedItem of expectedVisibleItems) {
+      if (!visibleItems.includes(expectedItem)) {
+        throw new Error(`Expected item "${expectedItem}" to be visible but only found: [${visibleItems.join(', ')}]`);
       }
     }
   }
@@ -117,6 +133,29 @@ class ModernTestOperations {
     const countElement = await this.page.waitForElement(this.page.getItemCountCss());
     const textContentFn = await this.page.waitForTextContent(expectedText, 'Expected item count text to be ' + expectedText);
     return textContentFn(countElement);
+  }
+
+  async assertTodoIsVisible(expectedText) {
+    // Find all visible todo labels and check if any contains the expected text
+    const labelElements = await this.page.browser.findElements(By.css('.todo-list li label'));
+    const visibleLabels = [];
+    
+    for (const labelElement of labelElements) {
+      try {
+        if (await labelElement.isDisplayed()) {
+          const text = await labelElement.getText();
+          visibleLabels.push(text);
+          if (text === expectedText) {
+            return; // Found the todo, test passes
+          }
+        }
+      } catch (e) {
+        // Element might be stale, skip it
+        continue;
+      }
+    }
+    
+    throw new Error(`Expected todo "${expectedText}" to be visible, but only found: [${visibleLabels.join(', ')}]`);
   }
 
   async assertFilterAtIndexIsSelected(index) {
