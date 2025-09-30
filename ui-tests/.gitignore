@@ -1,0 +1,34 @@
+# Add test-results and coverage directories to gitignore
+test-results/
+playwright-report/
+coverage/
+
+# Add node_modules for this test directory
+node_modules/
+
+# Playwright traces and videos
+*.trace
+*.webm
+
+# IDE files
+.vscode/
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
